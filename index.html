@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice Intelligence Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body data-theme="light">
+<div id="authModal" class="auth-modal">
+    <div class="auth-card">
+        <div class="auth-copy">
+            <p class="eyebrow">Secure Finance Access</p>
+            <h1>Invoice Intelligence Command Center</h1>
+            <p>Sign in to access invoice automation, persistent history, enterprise analytics, and export-ready reports.</p>
+        </div>
+        <form id="loginForm" class="auth-form">
+            <label>
+                <span>Username</span>
+                <input id="username" autocomplete="username" placeholder="financeadmin">
+            </label>
+            <label>
+                <span>Password</span>
+                <input id="password" type="password" autocomplete="current-password" placeholder="Enter password">
+            </label>
+            <button type="submit" class="primary-btn">Sign In</button>
+            <p id="authStatus" class="helper-text">Demo login: financeadmin / Finance@123</p>
+        </form>
+    </div>
+</div>
+
+<div class="app-shell">
+    <header class="topbar">
+        <div>
+            <p class="eyebrow">Azure AI + Flask + SQLite</p>
+            <h2>Enterprise Invoice Operations</h2>
+        </div>
+        <div class="topbar-actions">
+            <button id="themeToggle" class="ghost-btn" type="button">Switch Theme</button>
+            <div class="user-chip">
+                <span id="sessionUser">Not signed in</span>
+                <button id="logoutBtn" class="link-btn" type="button">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-copy">
+            <p class="eyebrow">Automated Financial Operations</p>
+            <h1>Analyze invoices, validate extracted fields, and track enterprise processing history from one place.</h1>
+            <p class="hero-text">
+                This upgraded workspace combines Azure invoice extraction with a Flask backend, authenticated access,
+                SQLite history storage, drag-and-drop uploads, PDF exports, and a light or dark experience for daily operations.
+            </p>
+            <div class="hero-actions">
+                <button class="primary-btn" type="button" onclick="scrollToWorkspace()">Open Workspace</button>
+                <button class="ghost-btn" type="button" onclick="loadDemoData()">Load Demo Batch</button>
+            </div>
+        </div>
+
+        <div class="hero-panel">
+            <div class="hero-stat">
+                <span>Target model</span>
+                <strong>Azure `prebuilt-invoice`</strong>
+            </div>
+            <div class="hero-grid">
+                <div>
+                    <span>Invoices</span>
+                    <strong id="heroDocs">0</strong>
+                </div>
+                <div>
+                    <span>Validated fields</span>
+                    <strong id="heroFields">0</strong>
+                </div>
+                <div>
+                    <span>Accuracy</span>
+                    <strong id="heroAccuracy">0%</strong>
+                </div>
+                <div>
+                    <span>Avg time</span>
+                    <strong id="heroTime">0s</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main id="workspace" class="workspace">
+        <section class="panel">
+            <div class="section-heading">
+                <p class="section-kicker">Step 1</p>
+                <h2>Azure Resource Configuration</h2>
+                <p>Store endpoint and model settings per session, then use the Flask backend to broker live invoice analysis securely.</p>
+            </div>
+
+            <div class="form-grid">
+                <label>
+                    <span>Azure Endpoint</span>
+                    <input id="endpoint" placeholder="https://your-resource.cognitiveservices.azure.com">
+                </label>
+                <label>
+                    <span>API Key</span>
+                    <input id="key" type="password" placeholder="Paste your Azure key">
+                </label>
+                <label>
+                    <span>Model ID</span>
+                    <input id="modelId" value="prebuilt-invoice" placeholder="prebuilt-invoice">
+                </label>
+                <label>
+                    <span>API Version</span>
+                    <input id="apiVersion" value="2024-11-30" placeholder="2024-11-30">
+                </label>
+            </div>
+
+            <div class="resource-note">
+                <strong>Backend flow:</strong>
+                <span>Frontend uploads are sent to Flask, Flask calls Azure AI Document Intelligence, results are normalized, stored in SQLite, and exposed back to the dashboard and history panel.</span>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="section-heading">
+                <p class="section-kicker">Step 2</p>
+                <h2>Drag & Drop Invoice Intake</h2>
+                <p>Drop files into the secure upload zone, add invoice URLs for remote documents, and run batch analysis in one action.</p>
+            </div>
+
+            <div class="upload-grid">
+                <div id="dropzone" class="dropzone" tabindex="0">
+                    <p class="dropzone-title">Drag and drop invoices here</p>
+                    <p class="dropzone-text">PDF, JPG, PNG and mixed vendor layouts supported. You can also browse from your device.</p>
+                    <input id="fileInput" type="file" multiple accept=".pdf,image/*">
+                    <button id="browseBtn" class="ghost-btn" type="button">Browse Files</button>
+                </div>
+
+                <div class="url-box">
+                    <label>
+                        <span>Invoice URLs</span>
+                        <textarea id="docUrls" placeholder="Paste one invoice URL per line"></textarea>
+                    </label>
+                    <div class="button-row">
+                        <button class="primary-btn" type="button" onclick="analyzeInvoices()">Analyze Batch</button>
+                        <button class="ghost-btn" type="button" onclick="clearWorkspace()">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sampleList" class="sample-list">
+                <div class="empty-state">No invoice samples loaded yet.</div>
+            </div>
+        </section>
+
+        <section class="metrics-grid">
+            <article class="metric-card">
+                <span>Invoices processed</span>
+                <strong id="processedCount">0</strong>
+                <small>Live batch count in the current workspace</small>
+            </article>
+            <article class="metric-card">
+                <span>Average confidence</span>
+                <strong id="avgConfidence">0%</strong>
+                <small>Combined confidence for extracted finance fields</small>
+            </article>
+            <article class="metric-card">
+                <span>Manual time saved</span>
+                <strong id="timeSaved">0 min</strong>
+                <small>Estimated at 4 minutes per invoice</small>
+            </article>
+            <article class="metric-card">
+                <span>Validation accuracy</span>
+                <strong id="accuracyRate">0%</strong>
+                <small>Percentage of invoices meeting validation threshold</small>
+            </article>
+        </section>
+
+        <section class="insight-layout">
+            <section class="panel">
+                <div class="section-heading">
+                    <p class="section-kicker">Step 3</p>
+                    <h2>Extracted Invoice Intelligence</h2>
+                    <p>Inspect the selected invoice and review the exact fields returned by the backend pipeline.</p>
+                </div>
+
+                <div class="field-grid">
+                    <div class="field-card">
+                        <span>Invoice Number</span>
+                        <strong id="invoiceNumber">--</strong>
+                        <small id="invoiceNumberConf">Confidence: --</small>
+                    </div>
+                    <div class="field-card">
+                        <span>Vendor Name</span>
+                        <strong id="vendorName">--</strong>
+                        <small id="vendorNameConf">Confidence: --</small>
+                    </div>
+                    <div class="field-card">
+                        <span>Invoice Date</span>
+                        <strong id="invoiceDate">--</strong>
+                        <small id="invoiceDateConf">Confidence: --</small>
+                    </div>
+                    <div class="field-card">
+                        <span>Tax Amount</span>
+                        <strong id="taxAmount">--</strong>
+                        <small id="taxAmountConf">Confidence: --</small>
+                    </div>
+                    <div class="field-card">
+                        <span>Total Amount Due</span>
+                        <strong id="totalAmount">--</strong>
+                        <small id="totalAmountConf">Confidence: --</small>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="section-heading">
+                    <p class="section-kicker">Step 4</p>
+                    <h2>Validation Review</h2>
+                    <p>Compare invoice results and identify which records pass automatically versus those needing review.</p>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Vendor</th>
+                                <th>Number</th>
+                                <th>Date</th>
+                                <th>Tax</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="validationTable">
+                            <tr>
+                                <td colspan="7" class="empty-row">Validation results will appear here after analysis.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+
+        <section class="analytics-layout">
+            <section class="panel">
+                <div class="section-heading">
+                    <p class="section-kicker">Step 5</p>
+                    <h2>Operational Analytics</h2>
+                    <p>Monitor confidence and processing time across invoices in the active batch.</p>
+                </div>
+                <div class="chart-shell">
+                    <canvas id="chart"></canvas>
+                </div>
+            </section>
+
+            <section class="panel narrative-panel">
+                <div class="section-heading">
+                    <p class="section-kicker">Step 6</p>
+                    <h2>Enterprise Summary & Export</h2>
+                    <p>Generate an evaluation summary and export the result set as a PDF report for stakeholders.</p>
+                </div>
+                <div id="summary" class="summary-box">
+                    Configure Azure, authenticate into the system, run a mixed invoice batch, and review history-backed accuracy to demonstrate reduced manual effort and stronger process control.
+                </div>
+                <div class="button-row">
+                    <button id="pdfBtn" class="primary-btn" type="button">Export PDF Report</button>
+                    <button class="ghost-btn" type="button" onclick="loadHistory()">Refresh History</button>
+                </div>
+            </section>
+        </section>
+
+        <section class="history-layout">
+            <section class="panel history-panel">
+                <div class="section-heading">
+                    <p class="section-kicker">Stored Records</p>
+                    <h2>Invoice History</h2>
+                    <p>Every processed invoice is saved in the database so finance teams can audit prior runs and reopen invoice details later.</p>
+                </div>
+                <div id="historyList" class="history-list">
+                    <div class="empty-state">No invoice history found yet.</div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="section-heading">
+                    <p class="section-kicker">System Notes</p>
+                    <h2>Architecture Snapshot</h2>
+                    <p>This project now demonstrates end-to-end enterprise design, not only static UI presentation.</p>
+                </div>
+                <div class="stack-list">
+                    <div class="stack-item"><strong>Frontend</strong><span>Responsive dashboard, theme switcher, drag and drop, history view</span></div>
+                    <div class="stack-item"><strong>Backend</strong><span>Flask routes for login, analysis, history, and PDF export</span></div>
+                    <div class="stack-item"><strong>Database</strong><span>SQLite storage for invoice results, metrics, and timestamps</span></div>
+                    <div class="stack-item"><strong>Security</strong><span>Authenticated session access before processing invoices</span></div>
+                </div>
+            </section>
+        </section>
+    </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
