@@ -235,4 +235,4 @@ If you like this project, give it a ⭐ on GitHub.
 
 **Sujal Singh**
 
-GitHub: https://github.com/YOUR_USERNAME
+GitHub: https://github.com/sujalsingh0skg-creator
