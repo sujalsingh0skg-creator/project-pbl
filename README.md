@@ -155,20 +155,6 @@ Password : Finance@123
 ```txt
 prebuilt-invoice
 ```
-
----
-
-# 📸 Screenshots
-
-## 🖥️ Dashboard
-(Add screenshot here)
-
-## 📊 Analytics
-(Add screenshot here)
-
-## 🌙 Dark Mode
-(Add screenshot here)
-
 ---
 
 # 📈 Learning Outcomes
